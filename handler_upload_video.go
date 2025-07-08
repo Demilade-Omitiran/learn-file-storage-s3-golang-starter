@@ -89,9 +89,17 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	aspectRatio, err := getVideoAspectRatio(tempFile.Name())
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to get file's aspect ratio", err)
+		return
+	}
+
+	prefix := getPrefix(aspectRatio)
 	key := make([]byte, 32)
 	rand.Read(key)
-	s3Key := fmt.Sprintf("%x.mp4", key)
+	s3Key := fmt.Sprintf("%s%x.mp4", prefix, key)
 
 	s3PutObjectInputParam := s3.PutObjectInput{
 		Bucket:      &cfg.s3Bucket,
@@ -112,5 +120,16 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 	if err = cfg.db.UpdateVideo(videoMetadata); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to update video URL", err)
 		return
+	}
+}
+
+func getPrefix(aspectRatio string) string {
+	switch aspectRatio {
+	case "16:9":
+		return "landscape/"
+	case "9:16":
+		return "portrait/"
+	default:
+		return "other/"
 	}
 }
