@@ -96,6 +96,18 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	processedVideoPath, err := processVideoForFastStart(tempFile.Name())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to get process video for fast start", err)
+		return
+	}
+
+	processedVideo, err := os.Open(processedVideoPath)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to read processed video", err)
+		return
+	}
+
 	prefix := getPrefix(aspectRatio)
 	key := make([]byte, 32)
 	rand.Read(key)
@@ -104,7 +116,7 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 	s3PutObjectInputParam := s3.PutObjectInput{
 		Bucket:      &cfg.s3Bucket,
 		Key:         &s3Key,
-		Body:        tempFile,
+		Body:        processedVideo,
 		ContentType: &mediaType,
 	}
 
