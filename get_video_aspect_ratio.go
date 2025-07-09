@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"math"
 	"os/exec"
@@ -36,7 +35,6 @@ func getVideoAspectRatio(filePath string) (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(cmd)
 		log.Fatal(err)
 	}
 
@@ -48,8 +46,6 @@ func getVideoAspectRatio(filePath string) (string, error) {
 
 	width := outputStreams.Streams[0].Width
 	height := outputStreams.Streams[0].Height
-
-	fmt.Printf("width = %v, height = %v", width, height)
 
 	return calculateAspectRatio(width, height), nil
 }
